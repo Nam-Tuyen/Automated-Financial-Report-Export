@@ -1,8 +1,5 @@
 # Automated-Financial-Report-Export
-**1. Yêu cầu**
-Python ≥ 3.8
-
-**Các thư viện chính (đã liệt kê trong requirements.txt):**
+**1. Yêu cầu về các thư viện chính (đã liệt kê trong requirements.txt):**
 requests
 pandas
 python-dotenv
