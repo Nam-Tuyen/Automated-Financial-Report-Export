@@ -252,83 +252,9 @@ def get_company_introduction(stock_code, company_name, founding_date, initial_ca
     
     fallback = f"{company_name} (mã chứng khoán {stock_code}) được thành lập vào {founding_year if founding_year != 'N/A' else 'năm chưa xác định'} với vốn điều lệ ban đầu {initial_capital if initial_capital and initial_capital != 'N/A' else 'chưa có thông tin'}. Công ty đã phát triển qua nhiều giai đoạn và hiện có vị thế vững chắc trên thị trường chứng khoán Việt Nam với hoạt động kinh doanh đa dạng và hiệu quả."
     
-    prompt = f"""Bạn là chuyên gia viết báo cáo tài chính chuyên nghiệp. Hãy viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo ĐÚNG CẤU TRÚC và PHONG CÁCH của mẫu tham khảo dưới đây.
+    prompt = f"""Bạn là chuyên gia viết báo cáo tài chính chuyên nghiệp. Hãy viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo ĐÚNG mẫu và phong cách dưới đây, hoàn toàn bằng tiếng Việt:
 
-⚠️ QUAN TRỌNG: Bạn PHẢI tự tìm kiếm và viết lại HOÀN TOÀN bằng tiếng Việt. KHÔNG được copy/paraphrase trực tiếp từ raw text tiếng Anh có sẵn. Nếu có thông tin tham khảo dưới đây, hãy PARSE (rút trích) và VIẾT LẠI theo phong cách mẫu.
-
-═══════════════════════════════════════════════════════════════════════════════
-MẪU THAM KHẢO - CÁCH VIẾT (QUAN TRỌNG):
-═══════════════════════════════════════════════════════════════════════════════
-
-Công ty Cổ phần Tập đoàn Gelex (mã chứng khoán GEX) khởi nguồn từ Tổng Công ty Thiết bị kỹ thuật điện được thành lập vào ngày 27 tháng 10 năm 1995 theo Quyết định của Bộ Công nghiệp nặng (nay là Bộ Công Thương). Trải qua hơn một thập kỷ hoạt động theo mô hình Tổng Công ty Nhà nước, Gelex chính thức chuyển đổi thành Tổng Công ty Cổ phần Thiết bị điện Việt Nam vào ngày 01 tháng 12 năm 2010, sau đợt IPO thành công tại HNX.
-
-Kể từ khi Bộ Công Thương thoái toàn bộ vốn vào cuối năm 2015, công ty đã đẩy mạnh quá trình tái cấu trúc và phát triển mạnh mẽ. Đặc biệt, Gelex đã thực hiện nhiều đợt tăng vốn điều lệ ấn tượng, củng cố vị thế trên thị trường. Công ty chính thức niêm yết trên Sở Giao dịch Chứng khoán TP. Hồ Chí Minh (HOSE) từ đầu năm 2018. Bước ngoặt quan trọng là việc đổi tên thành Công ty Cổ phần Tập đoàn Gelex vào ngày 24 tháng 6 năm 2021, đánh dấu sự mở rộng sang mô hình Tập đoàn đa ngành. Đến tháng 9 năm 2024, vốn điều lệ của Tập đoàn đã đạt mức 8.594,29 tỷ đồng, khẳng định vị thế là một trong những tập đoàn kinh tế hàng đầu Việt Nam.
-
-═══════════════════════════════════════════════════════════════════════════════
-CẤU TRÚC BẮT BUỘC PHẢI THEO:
-═══════════════════════════════════════════════════════════════════════════════
-
-ĐOẠN 1 - BẮT ĐẦU (khoảng 60-70 chữ):
-- Format: "{company_name} (mã chứng khoán {stock_code}) khởi nguồn từ [tên/tổ chức tiền thân] được thành lập vào ngày [dd] tháng [mm] năm [yyyy]..."
-- Nếu có thông tin về cơ quan/tổ chức quyết định thành lập, hãy thêm vào
-- Tiếp theo: Mô tả ngắn về mô hình ban đầu hoạt động (nếu có) và sự kiện chuyển đổi quan trọng đầu tiên (IPO, cổ phần hóa, v.v.)
-
-ĐOẠN 2 - PHÁT TRIỂN (khoảng 80-90 chữ):
-- Mô tả các giai đoạn phát triển tiếp theo theo thứ tự thời gian
-- Bao gồm các sự kiện quan trọng:
-  + Thoái vốn nhà nước (nếu có)
-  + Tái cấu trúc
-  + Tăng vốn điều lệ
-  + Niêm yết tại sàn nào (HOSE/HNX/UPCOM) - Tự tìm kiếm thông tin
-  + Đổi tên công ty
-  + Mở rộng mô hình kinh doanh
-- KẾT THÚC: "Đến [tháng mm] năm [yyyy], vốn điều lệ của [công ty/tập đoàn] đã đạt mức [số tỷ đồng], khẳng định vị thế là một trong những [tập đoàn/doanh nghiệp] [lĩnh vực] hàng đầu Việt Nam."
-
-═══════════════════════════════════════════════════════════════════════════════
-THÔNG TIN THAM KHẢO (CHỈ ĐỂ PARSE, KHÔNG COPY):
-═══════════════════════════════════════════════════════════════════════════════
-- Tên công ty: {company_name}
-- Mã chứng khoán: {stock_code}
-- Thông tin thành lập (raw text, có thể là tiếng Anh): {founding_date[:200] if founding_date else 'N/A'}
-- Vốn điều lệ khi thành lập (nếu có): {initial_capital[:100] if initial_capital and initial_capital != 'N/A' else 'N/A'}
-
-LƯU Ý: Thông tin trên có thể là raw text tiếng Anh không đầy đủ. Bạn PHẢI:
-- Tự tìm kiếm thông tin công khai về {company_name} (mã {stock_code})
-- Parse (rút trích) ngày tháng/năm từ raw text nếu có (ví dụ: "November 2003" → "tháng 11 năm 2003")
-- Viết lại HOÀN TOÀN bằng tiếng Việt theo mẫu, KHÔNG copy nguyên raw text
-
-═══════════════════════════════════════════════════════════════════════════════
-YÊU CẦU BẮT BUỘC:
-═══════════════════════════════════════════════════════════════════════════════
-1. Độ dài: KHOẢNG 150 chữ (từ 145 đến 160 chữ), viết thành 2 đoạn rõ ràng
-2. Format ngày: PHẢI viết "ngày [dd] tháng [mm] năm [yyyy]" bằng tiếng Việt
-   - Nếu chỉ có tháng/năm: "tháng [mm] năm [yyyy]" (ví dụ: "tháng 11 năm 2003")
-   - Nếu chỉ có năm: "năm [yyyy]"
-   - KHÔNG được dùng "November 2003" hay format tiếng Anh
-3. Tự tìm kiếm thông tin công khai về: 
-   - Ngày thành lập chính xác
-   - Tổ chức/công ty tiền thân
-   - Lịch sử IPO, niêm yết (sàn HOSE/HNX/UPCOM)
-   - Đổi tên công ty
-   - Tăng vốn điều lệ qua các năm
-   - Vốn điều lệ hiện tại
-4. Phong cách: Chuyên nghiệp, khách quan, có cấu trúc thời gian rõ ràng
-5. Ngôn ngữ: 100% TIẾNG VIỆT, không có từ tiếng Anh (trừ mã chứng khoán)
-6. KHÔNG được viết như: "established with..." hay copy bất kỳ raw text nào
-7. Nếu không tìm được thông tin đầy đủ, vẫn phải viết theo cấu trúc với thông tin đã parse được
-
-═══════════════════════════════════════════════════════════════════════════════
-KIỂM TRA TRƯỚC KHI HOÀN THÀNH:
-═══════════════════════════════════════════════════════════════════════════════
-✓ Tất cả đã viết bằng tiếng Việt?
-✓ Format ngày tháng đúng "tháng [số] năm [năm]" hoặc "ngày [số] tháng [số] năm [năm]"?
-✓ Không còn raw text tiếng Anh như "established", "was", "Limited Company"?
-✓ Có 2 đoạn rõ ràng, khoảng 150 chữ?
-✓ Có thông tin về IPO, niêm yết, đổi tên (nếu tìm được)?
-
-═══════════════════════════════════════════════════════════════════════════════
-
-Bắt đầu viết ngay, KHÔNG thêm lời giải thích hay ký hiệu đặc biệt. Chỉ viết nội dung giới thiệu công ty."""
+Công ty Cổ phần Tập đoàn Gelex (mã chứng khoán GEX) khởi nguồn từ Tổng Công ty Thiết bị kỹ thuật điện được thành lập vào ngày 27 tháng 10 năm 1995 theo Quyết định của Bộ Công nghiệp nặng (nay là Bộ Công Thương). Trải qua hơn một thập kỷ hoạt động theo mô hình Tổng Công ty Nhà nước, Gelex chính thức chuyển đổi thành Tổng Công ty Cổ phần Thiết bị điện Việt Nam vào ngày 01 tháng 12 năm 2010, sau đợt IPO thành công tại HNX. Kể từ khi Bộ Công Thương thoái toàn bộ vốn vào cuối năm 2015, công ty đã đẩy mạnh quá trình tái cấu trúc và phát triển mạnh mẽ. Đặc biệt, Gelex đã thực hiện nhiều đợt tăng vốn điều lệ ấn tượng, củng cố vị thế trên thị trường. Công ty chính thức niêm yết trên Sở Giao dịch Chứng khoán TP. Hồ Chí Minh (HOSE) từ đầu năm 2018. Bước ngoặt quan trọng là việc đổi tên thành Công ty Cổ phần Tập đoàn Gelex vào ngày 24 tháng 6 năm 2021, đánh dấu sự mở rộng sang mô hình Tập đoàn đa ngành. Đến tháng 9 năm 2024, vốn điều lệ của Tập đoàn đã đạt mức 8.594,29 tỷ đồng, khẳng định vị thế là một trong những tập đoàn kinh tế hàng đầu Việt Nam."""
     
     intro_text = ask_gemini_fn(prompt, fallback_content=fallback)
     
