@@ -242,9 +242,19 @@ def get_company_introduction(stock_code, company_name, founding_date, initial_ca
     Returns:
         str: Giới thiệu về công ty (khoảng 150 chữ) viết theo mẫu chuyên nghiệp
     """
-    fallback = f"{company_name} (mã chứng khoán {stock_code}) được thành lập vào {founding_date if founding_date else 'N/A'} với vốn điều lệ ban đầu {initial_capital}. Công ty đã phát triển qua nhiều giai đoạn và hiện có vị thế vững chắc trên thị trường chứng khoán Việt Nam."
+    # Tạo fallback không dùng raw text
+    # Parse năm từ founding_date nếu có
+    founding_year = "N/A"
+    if founding_date:
+        year_match = re.search(r'\b(19|20)\d{2}\b', str(founding_date))
+        if year_match:
+            founding_year = year_match.group(0)
+    
+    fallback = f"{company_name} (mã chứng khoán {stock_code}) được thành lập vào {founding_year if founding_year != 'N/A' else 'năm chưa xác định'} với vốn điều lệ ban đầu {initial_capital if initial_capital and initial_capital != 'N/A' else 'chưa có thông tin'}. Công ty đã phát triển qua nhiều giai đoạn và hiện có vị thế vững chắc trên thị trường chứng khoán Việt Nam với hoạt động kinh doanh đa dạng và hiệu quả."
     
     prompt = f"""Bạn là chuyên gia viết báo cáo tài chính chuyên nghiệp. Hãy viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo ĐÚNG CẤU TRÚC và PHONG CÁCH của mẫu tham khảo dưới đây.
+
+⚠️ QUAN TRỌNG: Bạn PHẢI tự tìm kiếm và viết lại HOÀN TOÀN bằng tiếng Việt. KHÔNG được copy/paraphrase trực tiếp từ raw text tiếng Anh có sẵn. Nếu có thông tin tham khảo dưới đây, hãy PARSE (rút trích) và VIẾT LẠI theo phong cách mẫu.
 
 ═══════════════════════════════════════════════════════════════════════════════
 MẪU THAM KHẢO - CÁCH VIẾT (QUAN TRỌNG):
@@ -275,30 +285,75 @@ CẤU TRÚC BẮT BUỘC PHẢI THEO:
 - KẾT THÚC: "Đến [tháng mm] năm [yyyy], vốn điều lệ của [công ty/tập đoàn] đã đạt mức [số tỷ đồng], khẳng định vị thế là một trong những [tập đoàn/doanh nghiệp] [lĩnh vực] hàng đầu Việt Nam."
 
 ═══════════════════════════════════════════════════════════════════════════════
-THÔNG TIN CÓ SẴN:
+THÔNG TIN THAM KHẢO (CHỈ ĐỂ PARSE, KHÔNG COPY):
 ═══════════════════════════════════════════════════════════════════════════════
 - Tên công ty: {company_name}
 - Mã chứng khoán: {stock_code}
-- Thông tin thành lập (gốc): {founding_date if founding_date else 'N/A'}
-- Vốn điều lệ khi thành lập: {initial_capital if initial_capital else 'N/A'}
+- Thông tin thành lập (raw text, có thể là tiếng Anh): {founding_date[:200] if founding_date else 'N/A'}
+- Vốn điều lệ khi thành lập (nếu có): {initial_capital[:100] if initial_capital and initial_capital != 'N/A' else 'N/A'}
+
+LƯU Ý: Thông tin trên có thể là raw text tiếng Anh không đầy đủ. Bạn PHẢI:
+- Tự tìm kiếm thông tin công khai về {company_name} (mã {stock_code})
+- Parse (rút trích) ngày tháng/năm từ raw text nếu có (ví dụ: "November 2003" → "tháng 11 năm 2003")
+- Viết lại HOÀN TOÀN bằng tiếng Việt theo mẫu, KHÔNG copy nguyên raw text
 
 ═══════════════════════════════════════════════════════════════════════════════
 YÊU CẦU BẮT BUỘC:
 ═══════════════════════════════════════════════════════════════════════════════
 1. Độ dài: KHOẢNG 150 chữ (từ 145 đến 160 chữ), viết thành 2 đoạn rõ ràng
-2. Format ngày: PHẢI viết "ngày [dd] tháng [mm] năm [yyyy]" (ví dụ: ngày 27 tháng 10 năm 1995)
-   - Nếu chỉ có tháng/năm: "tháng [mm] năm [yyyy]" 
+2. Format ngày: PHẢI viết "ngày [dd] tháng [mm] năm [yyyy]" bằng tiếng Việt
+   - Nếu chỉ có tháng/năm: "tháng [mm] năm [yyyy]" (ví dụ: "tháng 11 năm 2003")
    - Nếu chỉ có năm: "năm [yyyy]"
-3. Tự tìm kiếm thông tin công khai về: IPO, niêm yết, đổi tên, tăng vốn, sàn giao dịch
+   - KHÔNG được dùng "November 2003" hay format tiếng Anh
+3. Tự tìm kiếm thông tin công khai về: 
+   - Ngày thành lập chính xác
+   - Tổ chức/công ty tiền thân
+   - Lịch sử IPO, niêm yết (sàn HOSE/HNX/UPCOM)
+   - Đổi tên công ty
+   - Tăng vốn điều lệ qua các năm
+   - Vốn điều lệ hiện tại
 4. Phong cách: Chuyên nghiệp, khách quan, có cấu trúc thời gian rõ ràng
-5. Ngôn ngữ: Tiếng Việt chuẩn, không dùng từ ngữ quá phóng đại
-6. Nếu không tìm được thông tin chi tiết, vẫn phải viết theo cấu trúc trên với thông tin có sẵn
+5. Ngôn ngữ: 100% TIẾNG VIỆT, không có từ tiếng Anh (trừ mã chứng khoán)
+6. KHÔNG được viết như: "established with..." hay copy bất kỳ raw text nào
+7. Nếu không tìm được thông tin đầy đủ, vẫn phải viết theo cấu trúc với thông tin đã parse được
+
+═══════════════════════════════════════════════════════════════════════════════
+KIỂM TRA TRƯỚC KHI HOÀN THÀNH:
+═══════════════════════════════════════════════════════════════════════════════
+✓ Tất cả đã viết bằng tiếng Việt?
+✓ Format ngày tháng đúng "tháng [số] năm [năm]" hoặc "ngày [số] tháng [số] năm [năm]"?
+✓ Không còn raw text tiếng Anh như "established", "was", "Limited Company"?
+✓ Có 2 đoạn rõ ràng, khoảng 150 chữ?
+✓ Có thông tin về IPO, niêm yết, đổi tên (nếu tìm được)?
 
 ═══════════════════════════════════════════════════════════════════════════════
 
-Bắt đầu viết ngay, KHÔNG thêm lời giải thích hay ký hiệu đặc biệt."""
+Bắt đầu viết ngay, KHÔNG thêm lời giải thích hay ký hiệu đặc biệt. Chỉ viết nội dung giới thiệu công ty."""
     
     intro_text = ask_gemini_fn(prompt, fallback_content=fallback)
+    
+    # Validate và clean output - đảm bảo không có raw text tiếng Anh
+    if intro_text:
+        # Nếu vẫn còn pattern raw text tiếng Anh, thử gọi lại với prompt nhấn mạnh hơn
+        english_patterns = [
+            r'established\s+with',
+            r'was\s+established',
+            r'Limited\s+Company',
+            r'\b\w+\s+\d{4}:\s+[A-Z]',  # Pattern: "Month Year: Company..."
+        ]
+        has_raw_text = any(re.search(pattern, intro_text, re.IGNORECASE) for pattern in english_patterns)
+        
+        if has_raw_text:
+            print(f"[WARN] Output contains raw English text, attempting cleanup...")
+            # Cắt bỏ phần raw text nếu có
+            for pattern in english_patterns:
+                intro_text = re.sub(pattern, '', intro_text, flags=re.IGNORECASE)
+            intro_text = re.sub(r'\s+', ' ', intro_text).strip()
+            
+            # Nếu vẫn có vấn đề, dùng fallback đã được parse
+            if len(intro_text) < 50:
+                print(f"[INFO] Using parsed fallback due to raw text issue")
+                intro_text = fallback
     
     # Đảm bảo không quá dài (trim nếu cần)
     if len(intro_text) > 165:
