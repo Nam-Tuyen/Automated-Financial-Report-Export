@@ -24,3 +24,7 @@ Thumbs.db
 # Streamlit
 .streamlit/
 
+
+*.mp4
+*.pdf
+!**/requirements.txt
