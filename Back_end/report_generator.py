@@ -250,7 +250,8 @@ def get_company_introduction(stock_code, company_name, founding_date, initial_ca
         if year_match:
             founding_year = year_match.group(0)
     
-    fallback = f"{company_name} (mã chứng khoán {stock_code}) được thành lập vào {founding_year if founding_year != 'N/A' else 'năm chưa xác định'} với vốn điều lệ ban đầu {initial_capital if initial_capital and initial_capital != 'N/A' else 'chưa có thông tin'}. Công ty đã phát triển qua nhiều giai đoạn và hiện có vị thế vững chắc trên thị trường chứng khoán Việt Nam với hoạt động kinh doanh đa dạng và hiệu quả."
+    # Tạo fallback_content theo mẫu tham khảo
+    fallback = f"""{company_name} (mã chứng khoán {stock_code}) được thành lập vào {founding_year if founding_year != 'N/A' else 'năm chưa xác định'}. Công ty đã phát triển qua nhiều giai đoạn và hiện có vị thế vững chắc trên thị trường chứng khoán Việt Nam. Với hoạt động kinh doanh đa dạng và hiệu quả, công ty đã khẳng định được vị thế trong ngành và đạt được nhiều thành tựu đáng kể. Trải qua các giai đoạn phát triển, công ty đã không ngừng mở rộng quy mô hoạt động và nâng cao năng lực cạnh tranh. Đến nay, công ty tiếp tục đẩy mạnh đầu tư và phát triển, hướng tới mục tiêu trở thành một trong những doanh nghiệp dẫn đầu trong lĩnh vực hoạt động."""
     
     prompt = f"""Bạn là chuyên gia viết báo cáo tài chính chuyên nghiệp. Hãy viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo ĐÚNG mẫu và phong cách dưới đây, hoàn toàn bằng tiếng Việt, khoảng 300 từ:
 
