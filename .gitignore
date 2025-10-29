@@ -28,3 +28,6 @@ Thumbs.db
 *.mp4
 *.pdf
 !**/requirements.txt
+# Allow specific large files to be tracked by Git LFS
+!Demo video.mp4
+!Report_VIC.pdf
