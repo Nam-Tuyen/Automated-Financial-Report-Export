@@ -230,40 +230,60 @@ def extract_month_year(founding_date_text):
 
 def get_company_introduction(stock_code, company_name, founding_date, initial_capital, ask_gemini_fn):
     """
-    Lấy giới thiệu về công ty bằng Gemini AI (khoảng 150 chữ).
+    Lấy giới thiệu về công ty bằng Gemini AI viết theo mẫu chuyên nghiệp (khoảng 150 chữ).
     
     Args:
         stock_code: Mã cổ phiếu
         company_name: Tên công ty
-        founding_date: Ngày thành lập (chỉ cần Month/Year)
+        founding_date: Ngày thành lập (raw text, có thể chứa đầy đủ thông tin)
         initial_capital: Vốn điều lệ khi thành lập
         ask_gemini_fn: Hàm gọi Gemini
     
     Returns:
-        str: Giới thiệu về công ty (khoảng 150 chữ)
+        str: Giới thiệu về công ty (khoảng 150 chữ) viết theo mẫu chuyên nghiệp
     """
-    # Rút trích Month/Year từ founding_date
-    month_year = extract_month_year(founding_date)
+    fallback = f"{company_name} (mã chứng khoán {stock_code}) được thành lập vào {founding_date if founding_date else 'N/A'} với vốn điều lệ ban đầu {initial_capital}. Công ty đã phát triển qua nhiều giai đoạn và hiện có vị thế vững chắc trên thị trường chứng khoán Việt Nam."
     
-    fallback = f"{company_name} được thành lập vào {month_year} với vốn điều lệ ban đầu {initial_capital}. Công ty hoạt động trong lĩnh vực kinh doanh với vị thế vững chắc trên thị trường và đóng góp tích cực cho sự phát triển của ngành."
-    
-    prompt = f"""Viết giới thiệu về công ty {company_name} (mã cổ phiếu: {stock_code}), KHOẢNG 150 CHỮ (không được quá dài), bao gồm:
-1. Thông tin cơ bản về công ty
-2. Ngày thành lập: {month_year}
-3. Vốn điều lệ khi mới thành lập: {initial_capital}
-4. Vị thế hoặc điểm nổi bật ngắn gọn
+    prompt = f"""Viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo MẪU THAM KHẢO dưới đây:
 
-YÊU CẦU:
-- Độ dài chính xác khoảng 150 chữ (không quá 160 chữ)
-- Viết tiếng Việt, ngắn gọn, chuyên nghiệp
-- Nêu được tổng quát về công ty"""
+MẪU THAM KHẢO:
+"Công ty Cổ phần Tập đoàn Gelex (mã chứng khoán GEX) khởi nguồn từ Tổng Công ty Thiết bị kỹ thuật điện được thành lập vào ngày 27 tháng 10 năm 1995 theo Quyết định của Bộ Công nghiệp nặng (nay là Bộ Công Thương). Trải qua hơn một thập kỷ hoạt động theo mô hình Tổng Công ty Nhà nước, Gelex chính thức chuyển đổi thành Tổng Công ty Cổ phần Thiết bị điện Việt Nam vào ngày 01 tháng 12 năm 2010, sau đợt IPO thành công tại HNX.
+
+Kể từ khi Bộ Công Thương thoái toàn bộ vốn vào cuối năm 2015, công ty đã đẩy mạnh quá trình tái cấu trúc và phát triển mạnh mẽ. Đặc biệt, Gelex đã thực hiện nhiều đợt tăng vốn điều lệ ấn tượng, củng cố vị thế trên thị trường. Công ty chính thức niêm yết trên Sở Giao dịch Chứng khoán TP. Hồ Chí Minh (HOSE) từ đầu năm 2018. Bước ngoặt quan trọng là việc đổi tên thành Công ty Cổ phần Tập đoàn Gelex vào ngày 24 tháng 6 năm 2021, đánh dấu sự mở rộng sang mô hình Tập đoàn đa ngành. Đến tháng 9 năm 2024, vốn điều lệ của Tập đoàn đã đạt mức 8.594,29 tỷ đồng, khẳng định vị thế là một trong những tập đoàn kinh tế hàng đầu Việt Nam."
+
+YÊU CẦU VIẾT:
+1. BẮT ĐẦU: "{company_name} (mã chứng khoán {stock_code}) khởi nguồn từ... được thành lập vào ngày [dd] tháng [mm] năm [yyyy]..." (nếu có đầy đủ thông tin, nếu không thì chỉ dùng thông tin có sẵn)
+2. MÔ TẢ LỊCH SỬ: Các giai đoạn phát triển, chuyển đổi, IPO, niêm yết, đổi tên (nếu có thông tin)
+3. KẾT THÚC: Vốn điều lệ hiện tại (nếu có) và vị thế trên thị trường
+
+THÔNG TIN CÓ SẴN:
+- Ngày thành lập (thông tin gốc): {founding_date if founding_date else 'N/A'}
+- Vốn điều lệ khi thành lập: {initial_capital if initial_capital else 'N/A'}
+
+LƯU Ý:
+- Độ dài KHOẢNG 150 chữ (không quá 160 chữ)
+- Format ngày tháng: "ngày [dd] tháng [mm] năm [yyyy]" (ví dụ: ngày 27 tháng 10 năm 1995)
+- Nếu không có ngày đầy đủ, dùng format: "tháng [mm] năm [yyyy]" hoặc chỉ "năm [yyyy]"
+- Viết tiếng Việt, chuyên nghiệp, có cấu trúc thời gian rõ ràng
+- Nếu không có đủ thông tin lịch sử, tập trung vào thông tin cơ bản và vị thế hiện tại
+- Tự tìm kiếm thông tin công khai về lịch sử phát triển, IPO, niêm yết nếu có"""
     
     intro_text = ask_gemini_fn(prompt, fallback_content=fallback)
     
     # Đảm bảo không quá dài (trim nếu cần)
     if len(intro_text) > 160:
-        # Cắt từ đầu và thêm ...
-        intro_text = intro_text[:157] + "..."
+        # Tìm câu cuối phù hợp để cắt
+        sentences = intro_text.split('.')
+        trimmed = ""
+        for i, sent in enumerate(sentences):
+            if len(trimmed + sent + '.') <= 157:
+                trimmed += sent + '.'
+            else:
+                break
+        if trimmed:
+            intro_text = trimmed.strip()
+        else:
+            intro_text = intro_text[:157] + "..."
     
     return intro_text
 
@@ -998,9 +1018,6 @@ def generate_stock_report(stock_code):
     num_shareholders = overview.get("no_shareholders", "")
     num_employees = overview.get("no_employees", "")
     
-    # Rút trích Month/Year từ founding_date để truyền vào AI
-    month_year_for_intro = extract_month_year(founding_date_raw) if founding_date_raw else "N/A"
-    
     # Tìm thông tin vốn điều lệ ban đầu từ founding_date
     initial_capital = "N/A"
     if founding_date_raw:
@@ -1022,11 +1039,12 @@ def generate_stock_report(stock_code):
             initial_capital = str(founding_date_raw)
     
     # Gọi AI để lấy giới thiệu và sứ mệnh
+    # Truyền nguyên founding_date_raw để AI có thể extract thông tin đầy đủ
     print("   Đang lấy thông tin giới thiệu công ty từ AI...")
     company_intro = get_company_introduction(
         stock_code=stock_code,
         company_name=company_name,
-        founding_date=month_year_for_intro,  # Chỉ truyền Month/Year (ví dụ: "03/2004")
+        founding_date=founding_date_raw if founding_date_raw else "",  # Truyền raw để AI tự format
         initial_capital=initial_capital if initial_capital != "N/A" else "",
         ask_gemini_fn=ask_gemini
     )
