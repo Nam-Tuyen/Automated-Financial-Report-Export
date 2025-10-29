@@ -244,46 +244,91 @@ def get_company_introduction(stock_code, company_name, founding_date, initial_ca
     """
     fallback = f"{company_name} (mã chứng khoán {stock_code}) được thành lập vào {founding_date if founding_date else 'N/A'} với vốn điều lệ ban đầu {initial_capital}. Công ty đã phát triển qua nhiều giai đoạn và hiện có vị thế vững chắc trên thị trường chứng khoán Việt Nam."
     
-    prompt = f"""Viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo MẪU THAM KHẢO dưới đây:
+    prompt = f"""Bạn là chuyên gia viết báo cáo tài chính chuyên nghiệp. Hãy viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo ĐÚNG CẤU TRÚC và PHONG CÁCH của mẫu tham khảo dưới đây.
 
-MẪU THAM KHẢO:
-"Công ty Cổ phần Tập đoàn Gelex (mã chứng khoán GEX) khởi nguồn từ Tổng Công ty Thiết bị kỹ thuật điện được thành lập vào ngày 27 tháng 10 năm 1995 theo Quyết định của Bộ Công nghiệp nặng (nay là Bộ Công Thương). Trải qua hơn một thập kỷ hoạt động theo mô hình Tổng Công ty Nhà nước, Gelex chính thức chuyển đổi thành Tổng Công ty Cổ phần Thiết bị điện Việt Nam vào ngày 01 tháng 12 năm 2010, sau đợt IPO thành công tại HNX.
+═══════════════════════════════════════════════════════════════════════════════
+MẪU THAM KHẢO - CÁCH VIẾT (QUAN TRỌNG):
+═══════════════════════════════════════════════════════════════════════════════
 
-Kể từ khi Bộ Công Thương thoái toàn bộ vốn vào cuối năm 2015, công ty đã đẩy mạnh quá trình tái cấu trúc và phát triển mạnh mẽ. Đặc biệt, Gelex đã thực hiện nhiều đợt tăng vốn điều lệ ấn tượng, củng cố vị thế trên thị trường. Công ty chính thức niêm yết trên Sở Giao dịch Chứng khoán TP. Hồ Chí Minh (HOSE) từ đầu năm 2018. Bước ngoặt quan trọng là việc đổi tên thành Công ty Cổ phần Tập đoàn Gelex vào ngày 24 tháng 6 năm 2021, đánh dấu sự mở rộng sang mô hình Tập đoàn đa ngành. Đến tháng 9 năm 2024, vốn điều lệ của Tập đoàn đã đạt mức 8.594,29 tỷ đồng, khẳng định vị thế là một trong những tập đoàn kinh tế hàng đầu Việt Nam."
+Công ty Cổ phần Tập đoàn Gelex (mã chứng khoán GEX) khởi nguồn từ Tổng Công ty Thiết bị kỹ thuật điện được thành lập vào ngày 27 tháng 10 năm 1995 theo Quyết định của Bộ Công nghiệp nặng (nay là Bộ Công Thương). Trải qua hơn một thập kỷ hoạt động theo mô hình Tổng Công ty Nhà nước, Gelex chính thức chuyển đổi thành Tổng Công ty Cổ phần Thiết bị điện Việt Nam vào ngày 01 tháng 12 năm 2010, sau đợt IPO thành công tại HNX.
 
-YÊU CẦU VIẾT:
-1. BẮT ĐẦU: "{company_name} (mã chứng khoán {stock_code}) khởi nguồn từ... được thành lập vào ngày [dd] tháng [mm] năm [yyyy]..." (nếu có đầy đủ thông tin, nếu không thì chỉ dùng thông tin có sẵn)
-2. MÔ TẢ LỊCH SỬ: Các giai đoạn phát triển, chuyển đổi, IPO, niêm yết, đổi tên (nếu có thông tin)
-3. KẾT THÚC: Vốn điều lệ hiện tại (nếu có) và vị thế trên thị trường
+Kể từ khi Bộ Công Thương thoái toàn bộ vốn vào cuối năm 2015, công ty đã đẩy mạnh quá trình tái cấu trúc và phát triển mạnh mẽ. Đặc biệt, Gelex đã thực hiện nhiều đợt tăng vốn điều lệ ấn tượng, củng cố vị thế trên thị trường. Công ty chính thức niêm yết trên Sở Giao dịch Chứng khoán TP. Hồ Chí Minh (HOSE) từ đầu năm 2018. Bước ngoặt quan trọng là việc đổi tên thành Công ty Cổ phần Tập đoàn Gelex vào ngày 24 tháng 6 năm 2021, đánh dấu sự mở rộng sang mô hình Tập đoàn đa ngành. Đến tháng 9 năm 2024, vốn điều lệ của Tập đoàn đã đạt mức 8.594,29 tỷ đồng, khẳng định vị thế là một trong những tập đoàn kinh tế hàng đầu Việt Nam.
 
+═══════════════════════════════════════════════════════════════════════════════
+CẤU TRÚC BẮT BUỘC PHẢI THEO:
+═══════════════════════════════════════════════════════════════════════════════
+
+ĐOẠN 1 - BẮT ĐẦU (khoảng 60-70 chữ):
+- Format: "{company_name} (mã chứng khoán {stock_code}) khởi nguồn từ [tên/tổ chức tiền thân] được thành lập vào ngày [dd] tháng [mm] năm [yyyy]..."
+- Nếu có thông tin về cơ quan/tổ chức quyết định thành lập, hãy thêm vào
+- Tiếp theo: Mô tả ngắn về mô hình ban đầu hoạt động (nếu có) và sự kiện chuyển đổi quan trọng đầu tiên (IPO, cổ phần hóa, v.v.)
+
+ĐOẠN 2 - PHÁT TRIỂN (khoảng 80-90 chữ):
+- Mô tả các giai đoạn phát triển tiếp theo theo thứ tự thời gian
+- Bao gồm các sự kiện quan trọng:
+  + Thoái vốn nhà nước (nếu có)
+  + Tái cấu trúc
+  + Tăng vốn điều lệ
+  + Niêm yết tại sàn nào (HOSE/HNX/UPCOM) - Tự tìm kiếm thông tin
+  + Đổi tên công ty
+  + Mở rộng mô hình kinh doanh
+- KẾT THÚC: "Đến [tháng mm] năm [yyyy], vốn điều lệ của [công ty/tập đoàn] đã đạt mức [số tỷ đồng], khẳng định vị thế là một trong những [tập đoàn/doanh nghiệp] [lĩnh vực] hàng đầu Việt Nam."
+
+═══════════════════════════════════════════════════════════════════════════════
 THÔNG TIN CÓ SẴN:
-- Ngày thành lập (thông tin gốc): {founding_date if founding_date else 'N/A'}
+═══════════════════════════════════════════════════════════════════════════════
+- Tên công ty: {company_name}
+- Mã chứng khoán: {stock_code}
+- Thông tin thành lập (gốc): {founding_date if founding_date else 'N/A'}
 - Vốn điều lệ khi thành lập: {initial_capital if initial_capital else 'N/A'}
 
-LƯU Ý:
-- Độ dài KHOẢNG 150 chữ (không quá 160 chữ)
-- Format ngày tháng: "ngày [dd] tháng [mm] năm [yyyy]" (ví dụ: ngày 27 tháng 10 năm 1995)
-- Nếu không có ngày đầy đủ, dùng format: "tháng [mm] năm [yyyy]" hoặc chỉ "năm [yyyy]"
-- Viết tiếng Việt, chuyên nghiệp, có cấu trúc thời gian rõ ràng
-- Nếu không có đủ thông tin lịch sử, tập trung vào thông tin cơ bản và vị thế hiện tại
-- Tự tìm kiếm thông tin công khai về lịch sử phát triển, IPO, niêm yết nếu có"""
+═══════════════════════════════════════════════════════════════════════════════
+YÊU CẦU BẮT BUỘC:
+═══════════════════════════════════════════════════════════════════════════════
+1. Độ dài: KHOẢNG 150 chữ (từ 145 đến 160 chữ), viết thành 2 đoạn rõ ràng
+2. Format ngày: PHẢI viết "ngày [dd] tháng [mm] năm [yyyy]" (ví dụ: ngày 27 tháng 10 năm 1995)
+   - Nếu chỉ có tháng/năm: "tháng [mm] năm [yyyy]" 
+   - Nếu chỉ có năm: "năm [yyyy]"
+3. Tự tìm kiếm thông tin công khai về: IPO, niêm yết, đổi tên, tăng vốn, sàn giao dịch
+4. Phong cách: Chuyên nghiệp, khách quan, có cấu trúc thời gian rõ ràng
+5. Ngôn ngữ: Tiếng Việt chuẩn, không dùng từ ngữ quá phóng đại
+6. Nếu không tìm được thông tin chi tiết, vẫn phải viết theo cấu trúc trên với thông tin có sẵn
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Bắt đầu viết ngay, KHÔNG thêm lời giải thích hay ký hiệu đặc biệt."""
     
     intro_text = ask_gemini_fn(prompt, fallback_content=fallback)
     
     # Đảm bảo không quá dài (trim nếu cần)
-    if len(intro_text) > 160:
-        # Tìm câu cuối phù hợp để cắt
+    if len(intro_text) > 165:
+        # Tìm câu cuối phù hợp để cắt, ưu tiên cắt ở dấu chấm
         sentences = intro_text.split('.')
         trimmed = ""
         for i, sent in enumerate(sentences):
-            if len(trimmed + sent + '.') <= 157:
-                trimmed += sent + '.'
+            test_text = trimmed + sent + '.' if sent.strip() else trimmed
+            if len(test_text) <= 160:
+                if sent.strip():
+                    trimmed += sent + '.'
             else:
                 break
-        if trimmed:
+        if trimmed and len(trimmed) >= 120:  # Đảm bảo còn đủ dài
             intro_text = trimmed.strip()
         else:
-            intro_text = intro_text[:157] + "..."
+            # Nếu trim không ổn, cắt theo từ
+            words = intro_text.split()
+            trimmed_words = []
+            char_count = 0
+            for word in words:
+                if char_count + len(word) + 1 <= 157:
+                    trimmed_words.append(word)
+                    char_count += len(word) + 1
+                else:
+                    break
+            if trimmed_words:
+                intro_text = ' '.join(trimmed_words) + "..."
+            else:
+                intro_text = intro_text[:157] + "..."
     
     return intro_text
 
