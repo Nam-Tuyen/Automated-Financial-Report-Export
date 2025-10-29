@@ -1,0 +1,224 @@
+"""
+Quick test script to verify font setup is working correctly.
+
+Usage:
+    python test_font_setup.py
+"""
+
+import sys
+from pathlib import Path
+
+# Color codes for terminal output
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+RESET = '\033[0m'
+BOLD = '\033[1m'
+
+
+def print_status(message, status='info'):
+    """Print colored status message."""
+    # Use ASCII characters for Windows compatibility
+    if status == 'ok':
+        print(f"{GREEN}[OK]{RESET} {message}")
+    elif status == 'warn':
+        print(f"{YELLOW}[WARN]{RESET} {message}")
+    elif status == 'error':
+        print(f"{RED}[ERROR]{RESET} {message}")
+    else:
+        print(f"  {message}")
+
+
+def test_imports():
+    """Test if all required modules can be imported."""
+    print(f"\n{BOLD}1. Testing imports...{RESET}")
+    
+    try:
+        from paths import FONTS_DIR, FONT_SANS_REG, FONT_SANS_BOLD
+        print_status("paths module imported successfully", 'ok')
+    except ImportError as e:
+        print_status(f"Failed to import paths: {e}", 'error')
+        return False
+    
+    try:
+        from helpers_fonts import ensure_fonts_exist, system_fallback_font
+        print_status("helpers_fonts module imported successfully", 'ok')
+    except ImportError as e:
+        print_status(f"Failed to import helpers_fonts: {e}", 'error')
+        return False
+    
+    return True
+
+
+def test_font_directory():
+    """Test if font directory exists and is configured correctly."""
+    print(f"\n{BOLD}2. Testing font directory...{RESET}")
+    
+    try:
+        from paths import FONTS_DIR
+        
+        print_status(f"Font directory path: {FONTS_DIR}", 'info')
+        
+        if FONTS_DIR.exists():
+            print_status("Font directory exists", 'ok')
+        else:
+            print_status("Font directory does not exist (will be created on first use)", 'warn')
+            
+        if FONTS_DIR.is_absolute():
+            print_status("Path is absolute (cross-platform ready)", 'ok')
+        else:
+            print_status("Path is relative", 'warn')
+            
+        return True
+    except Exception as e:
+        print_status(f"Error checking font directory: {e}", 'error')
+        return False
+
+
+def test_font_files():
+    """Test if font files exist."""
+    print(f"\n{BOLD}3. Testing font files...{RESET}")
+    
+    try:
+        from paths import FONT_SANS_REG, FONT_SANS_BOLD, FONT_SANS_ITAL, FONT_SANS_BI
+        
+        fonts = {
+            "Regular": FONT_SANS_REG,
+            "Bold": FONT_SANS_BOLD,
+            "Italic": FONT_SANS_ITAL,
+            "Bold Italic": FONT_SANS_BI,
+        }
+        
+        found = 0
+        total = len(fonts)
+        
+        for name, path in fonts.items():
+            if path.exists():
+                print_status(f"{name}: {path.name}", 'ok')
+                found += 1
+            else:
+                print_status(f"{name}: {path.name} (missing)", 'warn')
+        
+        print()
+        if found == total:
+            print_status(f"All {total} fonts found!", 'ok')
+        elif found > 0:
+            print_status(f"Found {found}/{total} fonts. System will use fallback for missing fonts.", 'warn')
+        else:
+            print_status(f"No fonts found. System will use Helvetica fallback (no Vietnamese support).", 'warn')
+            print_status("Run: python download_fonts.py to download fonts automatically", 'info')
+        
+        return True
+    except Exception as e:
+        print_status(f"Error checking font files: {e}", 'error')
+        return False
+
+
+def test_helpers():
+    """Test helper functions."""
+    print(f"\n{BOLD}4. Testing helper functions...{RESET}")
+    
+    try:
+        from paths import FONT_SANS_REG, FONT_SANS_BOLD, FONT_SANS_ITAL, FONT_SANS_BI
+        from helpers_fonts import ensure_fonts_exist, system_fallback_font
+        
+        # Test ensure_fonts_exist
+        font_map = {
+            "": FONT_SANS_REG,
+            "B": FONT_SANS_BOLD,
+            "I": FONT_SANS_ITAL,
+            "BI": FONT_SANS_BI,
+        }
+        
+        resolved = ensure_fonts_exist(font_map)
+        print_status(f"ensure_fonts_exist() resolved {len(resolved)}/{len(font_map)} fonts", 
+                    'ok' if len(resolved) > 0 else 'warn')
+        
+        # Test system_fallback_font
+        fallback = system_fallback_font()
+        print_status(f"Fallback font: {fallback}", 'ok')
+        
+        return True
+    except Exception as e:
+        print_status(f"Error testing helpers: {e}", 'error')
+        return False
+
+
+def test_pdf_class():
+    """Test if PDF class can be instantiated."""
+    print(f"\n{BOLD}5. Testing PDF class...{RESET}")
+    
+    try:
+        # Suppress print output from PDF class
+        import io
+        import contextlib
+        
+        with contextlib.redirect_stdout(io.StringIO()):
+            from report_generator import PDF
+            
+            # Try to create PDF instance
+            pdf = PDF()
+            print_status("PDF class instantiated successfully", 'ok')
+            
+            # Check if fonts were registered
+            if PDF._has_dejavu:
+                print_status("DejaVu fonts registered", 'ok')
+            else:
+                print_status("Using Helvetica fallback", 'warn')
+        
+        return True
+    except Exception as e:
+        print_status(f"Error testing PDF class: {e}", 'error')
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def main():
+    """Run all tests."""
+    print("=" * 60)
+    print(f"{BOLD}Font Setup Verification{RESET}")
+    print("=" * 60)
+    
+    tests = [
+        test_imports,
+        test_font_directory,
+        test_font_files,
+        test_helpers,
+        test_pdf_class,
+    ]
+    
+    results = []
+    for test in tests:
+        try:
+            result = test()
+            results.append(result)
+        except Exception as e:
+            print_status(f"Test failed with exception: {e}", 'error')
+            results.append(False)
+    
+    # Summary
+    print("\n" + "=" * 60)
+    print(f"{BOLD}Summary{RESET}")
+    print("=" * 60)
+    
+    passed = sum(results)
+    total = len(results)
+    
+    if passed == total:
+        print_status(f"All {total} tests passed!", 'ok')
+        print_status("Font setup is working correctly!", 'ok')
+        return 0
+    elif passed > 0:
+        print_status(f"{passed}/{total} tests passed", 'warn')
+        print_status("Some issues detected. Check warnings above.", 'warn')
+        return 1
+    else:
+        print_status("All tests failed!", 'error')
+        print_status("Please check your installation.", 'error')
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+

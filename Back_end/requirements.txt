@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+matplotlib
+fpdf
+PyPDF2
+vnstock
+google-generativeai
+python-dotenv
+openpyxl

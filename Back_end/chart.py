@@ -4,9 +4,27 @@ import re
 import glob
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 import textwrap
 from datetime import datetime
 from fpdf import FPDF
+import numpy as np
+
+# Fix encoding for Windows console
+if sys.platform == "win32":
+    import codecs
+    try:
+        # Check if stdout needs encoding fix
+        if hasattr(sys.stdout, 'encoding') and sys.stdout.encoding not in ['utf-8', 'UTF-8', None]:
+            if hasattr(sys.stdout, 'buffer'):
+                sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+        # Check if stderr needs encoding fix
+        if hasattr(sys.stderr, 'encoding') and sys.stderr.encoding not in ['utf-8', 'UTF-8', None]:
+            if hasattr(sys.stderr, 'buffer'):
+                sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    except (AttributeError, TypeError):
+        # If already wrapped or in special environment (like Streamlit), skip
+        pass
 
 # Các module được import từ project của bạn:
 from financial_statement import financial_ratios_final
@@ -28,7 +46,54 @@ from indicator import (
 from financial_statement import financial_ratios_final
 
 # Đường dẫn chứa file lưu ảnh
-FILEPATH = r"\Data\Data_store"
+from paths import DATA_STORE_DIR
+from paths import (
+    FONT_SANS_REG, FONT_SANS_BOLD, FONT_SANS_ITAL, FONT_SANS_BI,
+    FONT_SANS_XL, FONT_COND_REG, FONT_COND_BOLD, FONT_COND_ITAL, FONT_COND_BI
+)
+FILEPATH = str(DATA_STORE_DIR.resolve())
+
+# Load fonts for matplotlib (cross-platform)
+_fonts_loaded = False
+def _load_matplotlib_fonts():
+    """Load DejaVu fonts for matplotlib if not already loaded."""
+    global _fonts_loaded
+    if _fonts_loaded:
+        return
+    
+    font_files = [
+        FONT_SANS_REG, FONT_SANS_BOLD, FONT_SANS_ITAL, FONT_SANS_BI,
+        FONT_SANS_XL, FONT_COND_REG, FONT_COND_BOLD, FONT_COND_ITAL, FONT_COND_BI
+    ]
+    
+    loaded_count = 0
+    for font_path in font_files:
+        try:
+            # Resolve to absolute path
+            abs_path = font_path.resolve()
+            
+            # Verify file exists
+            if not font_path.exists():
+                print(f"Warning: Font file not found: {font_path}")
+                continue
+            
+            # Add font to matplotlib font manager
+            fm.fontManager.addfont(str(abs_path))
+            loaded_count += 1
+        except Exception as e:
+            print(f"Warning: Could not load font {font_path.name}: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    # Set default font family for matplotlib
+    plt.rcParams["font.family"] = "DejaVu Sans"
+    _fonts_loaded = True
+    
+    if loaded_count > 0:
+        print(f"Successfully loaded {loaded_count}/{len(font_files)} fonts for matplotlib.")
+
+# Load fonts on module import
+_load_matplotlib_fonts()
 
 # ------------------ Các hàm vẽ biểu đồ hiện có ------------------
 # (Các hàm dưới đây như draw_normalized_linegraph, draw_volume_comparison, plot_top_shareholders,
@@ -225,7 +290,27 @@ def get_df_chart_financial_ratios(stock_code):
     Trả về DataFrame có các cột là các chỉ số được chọn và index là các năm 2020 đến 2024.
     """
     df_final = financial_ratios_final(stock_code, period='year', lang='vi', dropna=True)
+    
+    # Debug: Print raw DataFrame info
+    print("\nRaw DataFrame info:")
+    print(df_final.info())
+    print("\nRaw DataFrame head:")
+    print(df_final.head())
+    
     df_chart = df_final.drop("Phân loại", errors="ignore").copy()
+    
+    # Debug: Print available columns after dropping Phân loại
+    print("\nAvailable columns after processing:")
+    for col in df_chart.columns:
+        print(f"  - {col}")
+        
+    # Debug: Print sample values for interesting columns
+    print("\nSample values from first row:")
+    for col in df_chart.columns:
+        if any(term in col.lower() for term in ['vay', 'vcsh', 'nh', 'nợ']):
+            print(f"  {col}: {df_chart[col].iloc[0] if len(df_chart) > 0 else 'N/A'}")
+
+    # Desired metrics we want to plot (human readable)
     desired_metrics = [
         "(Vay NH+DH)/VCSH", "Nợ/VCSH", "TSCĐ / Vốn CSH", "Vốn CSH/Vốn điều lệ", 
         "Số ngày thu tiền bình quân", "Số ngày tồn kho bình quân", "Số ngày thanh toán bình quân",
@@ -233,8 +318,86 @@ def get_df_chart_financial_ratios(stock_code):
         "Chỉ số thanh toán nhanh", "Đòn bẩy tài chính", "Chỉ số thanh toán hiện thời", "Khả năng chi trả lãi vay",
         "P/E", "P/B", "EPS (VND)", "BVPS (VND)"
     ]
-    existing_metrics = [metric for metric in desired_metrics if metric in df_chart.columns]
-    df_chart = df_chart[existing_metrics].copy()
+    
+    # Add common variants for problematic metrics
+    metric_variants = {
+        "(Vay NH+DH)/VCSH": ["(Vay NH+DH)/VCSH", "Vay NH+DH/VCSH", "Vay NHDH/VCSH", "(Vay NHDH)/VCSH", 
+                            "Vay ngân hàng và dài hạn/Vốn chủ sở hữu", "Vay ngân hàng/VCSH"]
+    }
+
+    # Helper: normalize names by removing non-alphanumeric characters and lowercasing
+    def _normalize(s):
+        s = str(s).lower()
+        # replace plus sign variants with plus, remove spaces and punctuation except letters/numbers
+        s = re.sub(r"[\uFF0B+]+", "+", s)
+        s = re.sub(r"[^0-9a-z]+", "", s)
+        return s
+
+    # Build map of normalized column -> original column name
+    norm_map = { _normalize(col): col for col in df_chart.columns }
+    
+    # Debug: Print normalized column mapping
+    print("\nNormalized column mapping:")
+    for norm, orig in norm_map.items():
+        print(f"  {norm} -> {orig}")
+
+    existing_metrics = []
+    from difflib import get_close_matches
+
+    for metric in desired_metrics:
+        # Try variants first if available
+        if metric in metric_variants:
+            found = False
+            for variant in metric_variants[metric]:
+                n = _normalize(variant)
+                print(f"\nTrying variant for {metric}: {variant} -> {n}")
+                if n in norm_map:
+                    existing_metrics.append(norm_map[n])
+                    print(f"Found match: {norm_map[n]}")
+                    found = True
+                    break
+            if found:
+                continue
+        
+        # Standard matching process
+        n = _normalize(metric)
+        print(f"\nTrying to match: {metric} -> {n}")
+        if n in norm_map:
+            existing_metrics.append(norm_map[n])
+            print(f"Direct match found: {norm_map[n]}")
+            continue
+            
+        # try fuzzy match among normalized keys
+        keys = list(norm_map.keys())
+        matches = get_close_matches(n, keys, n=1, cutoff=0.7)
+        if matches:
+            existing_metrics.append(norm_map[matches[0]])
+            print(f"Fuzzy match found: {norm_map[matches[0]]}")
+            continue
+            
+        # Try token-subset matching: if all token parts exist in a column normalized key
+        tokens = re.findall(r"\w+", n)
+        print(f"Trying token match with: {tokens}")
+        for k, orig in norm_map.items():
+            if all(tok in k for tok in tokens) and orig not in existing_metrics:
+                existing_metrics.append(orig)
+                print(f"Token match found: {orig}")
+                break
+
+    # Keep the order of desired_metrics but only add those found
+    # Remove duplicates while preserving order
+    seen = set()
+    ordered_existing = []
+    for m in existing_metrics:
+        if m not in seen:
+            seen.add(m)
+            ordered_existing.append(m)
+
+    if not ordered_existing:
+        # If nothing matched, return empty dataframe to avoid KeyError downstream
+        return pd.DataFrame()
+
+    df_chart = df_chart[ordered_existing].copy()
     return df_chart
 
 def process_df_chart(df_chart):
@@ -246,11 +409,42 @@ def process_df_chart(df_chart):
     """
     if "Phân loại" in df_chart.index:
         df_chart = df_chart.drop("Phân loại")
+    # Safe conversion: handle commas, percent signs, parentheses (negative numbers), dashes and empty strings
+    def _to_float(x):
+        if pd.isnull(x):
+            return np.nan
+        s = str(x).strip()
+        if s in ['', 'nan', 'NaN']:
+            return np.nan
+        # common replacements
+        s = s.replace(',', '')
+        s = s.replace('%', '')
+        # parentheses like (123) -> -123
+        s = s.replace('(', '-').replace(')', '')
+        # unicode dashes
+        s = s.replace('–', '-').replace('—', '-')
+        s = s.strip()
+        # sometimes values include non-numeric garbage, try to extract number-like prefix/suffix
+        try:
+            return float(s)
+        except Exception:
+            # fallback: remove any non-numeric trailing/leading chars
+            m = re.search(r"-?[0-9]+(?:\.[0-9]+)?", s)
+            if m:
+                try:
+                    return float(m.group(0))
+                except Exception:
+                    return np.nan
+            return np.nan
+
     for col in df_chart.columns:
-        df_chart[col] = df_chart[col].apply(lambda x: float(str(x).replace(',', '')) if pd.notnull(x) else x)
+        df_chart[col] = df_chart[col].apply(_to_float)
+
     for col in ["EPS (VND)", "BVPS (VND)"]:
         if col in df_chart.columns:
+            # convert to thousands and round
             df_chart[col] = (df_chart[col] / 1000).round(3)
+
     return df_chart
 
 def plot_line_chart_group(df, metrics, title, y_lim=None, y_label=""):

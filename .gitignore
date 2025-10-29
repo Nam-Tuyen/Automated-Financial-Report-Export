@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+.env
+.env.local
+Back_end/.env
+Back_end/.env.local
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Reports & generated assets
+Data/Data_store/**
+Data/Report_export/**
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+

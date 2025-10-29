@@ -1,7 +1,25 @@
+import sys
 import pandas as pd
+from paths import CSV_FT_FILE
+
+# Fix encoding for Windows console
+if sys.platform == "win32":
+    import codecs
+    try:
+        # Check if stdout needs encoding fix
+        if hasattr(sys.stdout, 'encoding') and sys.stdout.encoding not in ['utf-8', 'UTF-8', None]:
+            if hasattr(sys.stdout, 'buffer'):
+                sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+        # Check if stderr needs encoding fix
+        if hasattr(sys.stderr, 'encoding') and sys.stderr.encoding not in ['utf-8', 'UTF-8', None]:
+            if hasattr(sys.stderr, 'buffer'):
+                sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    except (AttributeError, TypeError):
+        # If already wrapped or in special environment (like Streamlit), skip
+        pass
 
 # Đường dẫn tới file CSV
-file_path = "Data/Data raw/FT2325.csv"
+file_path = str(CSV_FT_FILE.resolve())
 
 def get_close_data_from_csv(stock_code):
     """

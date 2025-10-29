@@ -1,0 +1,10 @@
+# Font files (binary, should not be committed)
+*.ttf
+*.otf
+*.pkl
+*.cw127.pkl
+
+# Allow this file
+!.gitignore
+!README.md
+

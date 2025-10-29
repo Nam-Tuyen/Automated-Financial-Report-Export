@@ -1,110 +1,71 @@
 # Automated-Financial-Report-Export
-**1. Yêu cầu về các thư viện chính (đã liệt kê trong requirements.txt):**
-requests
-pandas
-python-dotenv
 
-**2. Cài đặt**
-Clone repository
-git clone https://github.com/username/Automated-Financial-Report-Export.git
-cd Automated-Financial-Report-Export
+## Tính năng
+- Xuất báo cáo phân tích tài chính tự động (PDF) theo mã cổ phiếu.
+- Giao diện Streamlit hiện đại, luồng chạy mượt, có lịch sử tải báo cáo gần đây.
+- Tự động hóa đường dẫn bằng Pathlib, chạy được trên mọi máy không phụ thuộc đường dẫn tuyệt đối.
+- Tách biệt cấu hình API Gemini qua `.env`/`.env.local`, không lộ khóa trên GitHub.
 
-**Tạo môi trường ảo (ví dụ venv)**
-python -m venv venv
-source venv/bin/activate       # macOS/Linux
-venv\Scripts\activate          # Windows
+## Cài đặt nhanh
+1) Tạo môi trường ảo và cài thư viện
+```bash
+pip install -r Back_end/requirements.txt
+```
 
-**Cài đặt dependency**
-pip install -r requirements.txt
-
-**3. Cấu hình**
-API Key Gemini
-Đăng ký tài khoản tại https://www.gemini.com/ và tạo API Key.
-
-**Tạo file .env ở thư mục gốc với nội dung:**
+2) Cấu hình API Gemini an toàn (không commit)
+- Cách 1: Tạo file `.env.local` ở thư mục gốc dự án:
+```bash
 GEMINI_API_KEY=your_gemini_api_key_here
+```
+- Cách 2: Đặt biến môi trường hệ thống `GEMINI_API_KEY` (Windows PowerShell):
+```powershell
+[System.Environment]::SetEnvironmentVariable('GEMINI_API_KEY','your_gemini_api_key_here','User')
+```
 
-**Trong code, load bằng python-dotenv:**
-from dotenv import load_dotenv
-import os
-load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+3) Chạy ứng dụng
+```bash
+streamlit run Back_end/main.py
+```
 
-**Cập nhật đường dẫn dữ liệu**
-Trong các script, tìm dòng chú thích # Đường dẫn đến thư mục... và thay bằng đường dẫn tuyệt đối trên máy (ví dụ:
-data_store_path = r"C:\Users\Nguyen Thi Son\Downloads\Automated Financial Report Export\Data\Data_store")
-Tương tự với report_output_path trong export_report.py.
+## Cấu trúc chính
+- `Back_end/paths.py`: Trung tâm hóa đường dẫn (Data, output, fonts...).
+- `Back_end/main.py`: Giao diện Streamlit và luồng chạy 6 bước.
+- `Back_end/report_generator.py`: Tạo PDF (font nhúng, hình ảnh, bảng số liệu, phân tích AI).
+- `Back_end/data_processor.py`: Đọc Excel cleaned và xử lý dữ liệu.
+- `Back_end/financial_statement.py`: Chuẩn hóa bảng và xuất Excel ra `Data/Data_store`.
+- `Back_end/chart.py`, `Back_end/indicator.py`: Tính chỉ báo, vẽ và lưu biểu đồ.
+- `Back_end/ai_analyst.py`: Gọi Gemini thông qua biến `GEMINI_API_KEY`.
 
-**4. Cấu trúc thư mục**
-Automated Financial Report Export/
-├── .env                      # Chứa GEMINI_API_KEY (không commit lên Git)
-├── .gitignore                # Loại trừ .env và file không cần thiết khác
-├── README.md                 # Hướng dẫn này
-├── requirements.txt          # Thư viện Python cần cài
-├── fetch_data.py             # Lấy dữ liệu thô từ Gemini API
-├── process_data.py           # Xử lý, tổng hợp dữ liệu thành DataFrame
-├── export_report.py          # Xuất báo cáo (Excel/CSV/PDF) vào output/reports/
-├── utils/
-│   ├── helpers.py            # Các hàm chung (load_env, convert_date,…)
-│   └── constants.py          # Hằng số (URL Gemini API, tên bảng,…)
-├── Data/
-│   └── Data_store/           # Lưu trữ dữ liệu thô (CSV/JSON,…)
-└── output/
-    └── reports/              # Lưu báo cáo đầu ra
+## Nguyên tắc bảo mật khóa API
+- Dự án đọc `GEMINI_API_KEY` từ `.env.local` (ưu tiên) hoặc `.env`, hoặc biến môi trường.
+- `.gitignore` đã chặn `.env*` và các file sinh ra. Không commit khóa API.
 
+## Cài đặt Font (Bắt buộc cho tiếng Việt)
 
-**5. Chức năng chính**
-fetch_data.py
+**Vấn đề:** Báo cáo PDF cần font DejaVu để hiển thị tiếng Việt đúng.
 
-Kết nối tới Gemini API bằng GEMINI_API_KEY.
+**Giải pháp nhanh - Tự động download:**
+```bash
+cd Back_end
+python install_fonts_auto.py
+```
 
-Tải dữ liệu tài chính (giá cổ phiếu, báo cáo tổng hợp,…) vào Data/Data_store/.
+Hoặc (cần xác nhận):
+```bash
+cd Back_end
+python download_fonts.py
+```
 
-process_data.py
+**Hoặc download thủ công:**
+1. Tải DejaVu fonts từ: https://dejavu-fonts.github.io/Download.html
+2. Giải nén và copy các file `.ttf` vào: `Back_end/assets/fonts/`
+3. Cần 4 file: `DejaVuSans.ttf`, `DejaVuSans-Bold.ttf`, `DejaVuSans-Oblique.ttf`, `DejaVuSans-BoldOblique.ttf`
 
-Đọc dữ liệu thô từ Data/Data_store/.
+**Lưu ý:** Nếu không có font, hệ thống sẽ tự động fallback về Helvetica (không hỗ trợ tiếng Việt tốt).
 
-Làm sạch, tính toán các chỉ số cần thiết.
+Chi tiết xem: `Back_end/FONT_SETUP.md`
 
-Trả về DataFrame cho bước xuất báo cáo.
-
-export_report.py
-
-Nhận DataFrame từ process_data.py.
-
-Xuất báo cáo (Excel, CSV hoặc PDF) vào output/reports/.
-
-utils/helpers.py
-
-Chứa hàm chung: load .env, format ngày tháng, validate API Key,…
-
-utils/constants.py
-
-Định nghĩa các hằng số cố định (URL cơ bản Gemini API, tên bảng,…).
-
-
-**6. Hướng dẫn sử dụng**
-
-**Cấu hình**
-Mở .env, thêm GEMINI_API_KEY.
-Chỉnh lại tất cả biến đường dẫn (ví dụ data_store_path, report_output_path) thành đường dẫn tuyệt đối trên máy.
-
-**Chạy lần lượt các script**
-python fetch_data.py
-python process_data.py
-python export_report.py
-
-**Kết quả**
-Kiểm tra folder output/reports/ để lấy báo cáo đã xuất (PDF).
-
-**7. Lưu ý**
-.env: Không commit file này lên Git.
-
-Đường dẫn: Mỗi máy có cấu trúc khác nhau, cần cập nhật đúng.
-
-Debug: Nếu gặp lỗi “file not found”, kiểm tra lại biến *_path trong từng script.
-
-
-
-
-
+## Gợi ý lỗi thường gặp
+- **Font error / tiếng Việt hiển thị sai**: Cài đặt DejaVu fonts theo hướng dẫn ở trên.
+- **File dữ liệu không tồn tại**: Kiểm tra thư mục `Data/` đúng vị trí và tên file.
+- **Thiếu GEMINI_API_KEY**: Tạo `.env.local` hoặc đặt biến môi trường như hướng dẫn.

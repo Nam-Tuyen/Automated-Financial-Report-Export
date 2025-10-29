@@ -1,0 +1,206 @@
+"""
+Utility script to download DejaVu fonts automatically.
+This script downloads DejaVu fonts from the official GitHub repository
+and places them in the correct directory.
+
+Usage:
+    python download_fonts.py
+"""
+
+import os
+import sys
+import urllib.request
+import zipfile
+from pathlib import Path
+from io import BytesIO
+
+# Fix encoding for Windows console
+if sys.platform == "win32":
+    import codecs
+    try:
+        # Check if stdout needs encoding fix
+        if hasattr(sys.stdout, 'encoding') and sys.stdout.encoding not in ['utf-8', 'UTF-8', None]:
+            if hasattr(sys.stdout, 'buffer'):
+                sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+        # Check if stderr needs encoding fix
+        if hasattr(sys.stderr, 'encoding') and sys.stderr.encoding not in ['utf-8', 'UTF-8', None]:
+            if hasattr(sys.stderr, 'buffer'):
+                sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    except (AttributeError, TypeError):
+        # If already wrapped or in special environment (like Streamlit), skip
+        pass
+
+# Import paths from our project
+try:
+    from paths import FONTS_DIR
+except ImportError:
+    # Fallback if running from different directory
+    BACKEND_DIR = Path(__file__).resolve().parent
+    FONTS_DIR = BACKEND_DIR / "assets" / "fonts"
+
+# DejaVu Fonts release URL (version 2.37)
+DEJAVU_VERSION = "2.37"
+DEJAVU_URL = f"https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_{DEJAVU_VERSION.replace('.', '_')}/dejavu-fonts-ttf-{DEJAVU_VERSION}.zip"
+
+# Required font files
+REQUIRED_FONTS = [
+    "DejaVuSans.ttf",
+    "DejaVuSans-Bold.ttf",
+    "DejaVuSans-Oblique.ttf",
+    "DejaVuSans-BoldOblique.ttf",
+]
+
+# Optional font files
+OPTIONAL_FONTS = [
+    "DejaVuSans-ExtraLight.ttf",
+    "DejaVuSansCondensed.ttf",
+    "DejaVuSansCondensed-Bold.ttf",
+    "DejaVuSansCondensed-Oblique.ttf",
+    "DejaVuSansCondensed-BoldOblique.ttf",
+]
+
+
+def ensure_fonts_dir():
+    """Create fonts directory if it doesn't exist."""
+    FONTS_DIR.mkdir(parents=True, exist_ok=True)
+    print(f"✓ Fonts directory: {FONTS_DIR}")
+
+
+def check_existing_fonts():
+    """Check which fonts are already installed."""
+    existing = []
+    missing = []
+    
+    for font in REQUIRED_FONTS:
+        font_path = FONTS_DIR / font
+        if font_path.exists():
+            existing.append(font)
+        else:
+            missing.append(font)
+    
+    return existing, missing
+
+
+def download_dejavu_fonts():
+    """Download and extract DejaVu fonts from GitHub."""
+    print(f"\n📥 Downloading DejaVu Fonts version {DEJAVU_VERSION}...")
+    print(f"   URL: {DEJAVU_URL}")
+    
+    try:
+        # Download the zip file
+        print("   Downloading... (this may take a moment)")
+        with urllib.request.urlopen(DEJAVU_URL) as response:
+            zip_data = response.read()
+        
+        print("   ✓ Download complete")
+        
+        # Extract font files
+        print("   📦 Extracting fonts...")
+        with zipfile.ZipFile(BytesIO(zip_data)) as zip_file:
+            # List all files in the zip
+            all_files = zip_file.namelist()
+            
+            # Find the ttf directory (might be nested)
+            ttf_files = [f for f in all_files if f.endswith('.ttf') and '/ttf/' in f]
+            
+            extracted_count = 0
+            for file_path in ttf_files:
+                filename = os.path.basename(file_path)
+                
+                # Extract required and optional fonts
+                if filename in REQUIRED_FONTS or filename in OPTIONAL_FONTS:
+                    # Read from zip
+                    font_data = zip_file.read(file_path)
+                    
+                    # Write to fonts directory
+                    output_path = FONTS_DIR / filename
+                    with open(output_path, 'wb') as f:
+                        f.write(font_data)
+                    
+                    print(f"      ✓ {filename}")
+                    extracted_count += 1
+        
+        print(f"\n✅ Successfully extracted {extracted_count} font files!")
+        return True
+        
+    except urllib.error.URLError as e:
+        print(f"\n❌ Download failed: {e}")
+        print("   Please check your internet connection or download manually.")
+        return False
+    except zipfile.BadZipFile:
+        print("\n❌ Downloaded file is not a valid zip file.")
+        return False
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        return False
+
+
+def main():
+    """Main function."""
+    print("=" * 60)
+    print("DejaVu Fonts Auto-Installer")
+    print("=" * 60)
+    
+    # Ensure fonts directory exists
+    ensure_fonts_dir()
+    
+    # Check existing fonts
+    print("\n📋 Checking existing fonts...")
+    existing, missing = check_existing_fonts()
+    
+    if existing:
+        print(f"   ✓ Found {len(existing)} font(s):")
+        for font in existing:
+            print(f"      - {font}")
+    
+    if missing:
+        print(f"   ⚠ Missing {len(missing)} font(s):")
+        for font in missing:
+            print(f"      - {font}")
+    else:
+        print("\n✅ All required fonts are already installed!")
+        response = input("\nDo you want to re-download anyway? (y/N): ")
+        if response.lower() not in ['y', 'yes']:
+            print("Exiting.")
+            return 0
+    
+    # Ask for confirmation
+    print("\n" + "=" * 60)
+    response = input("Download DejaVu fonts now? (Y/n): ")
+    if response.lower() in ['n', 'no']:
+        print("\nCancelled. You can download fonts manually from:")
+        print("https://dejavu-fonts.github.io/Download.html")
+        return 1
+    
+    # Download fonts
+    success = download_dejavu_fonts()
+    
+    if success:
+        # Verify installation
+        print("\n🔍 Verifying installation...")
+        existing, missing = check_existing_fonts()
+        
+        if not missing:
+            print("✅ All required fonts installed successfully!")
+            print(f"\n📁 Location: {FONTS_DIR}")
+            return 0
+        else:
+            print(f"⚠ Warning: {len(missing)} fonts still missing:")
+            for font in missing:
+                print(f"   - {font}")
+            return 1
+    else:
+        print("\n💡 Manual installation instructions:")
+        print("1. Download from: https://dejavu-fonts.github.io/Download.html")
+        print("2. Extract the zip file")
+        print(f"3. Copy .ttf files to: {FONTS_DIR}")
+        return 1
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("\n\n⚠ Cancelled by user.")
+        sys.exit(130)
+

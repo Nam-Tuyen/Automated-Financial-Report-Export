@@ -1,7 +1,25 @@
 import re
+import sys
 import pandas as pd
 from data_processor import balance_sheet, income_statement, cash_flow, get_financial_ratios_vci
 from datetime import datetime
+from paths import DATA_STORE_DIR
+
+# Fix encoding for Windows console
+if sys.platform == "win32":
+    import codecs
+    try:
+        # Check if stdout needs encoding fix
+        if hasattr(sys.stdout, 'encoding') and sys.stdout.encoding not in ['utf-8', 'UTF-8', None]:
+            if hasattr(sys.stdout, 'buffer'):
+                sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+        # Check if stderr needs encoding fix
+        if hasattr(sys.stderr, 'encoding') and sys.stderr.encoding not in ['utf-8', 'UTF-8', None]:
+            if hasattr(sys.stderr, 'buffer'):
+                sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    except (AttributeError, TypeError):
+        # If already wrapped or in special environment (like Streamlit), skip
+        pass
 
 def balance_sheet_final(df):
     r"""
@@ -291,11 +309,11 @@ def export_financial_reports(df_balance_sheet, df_income_statement, df_cash_flow
     stock_code = df_bs_final.loc["Mã cổ phiếu", "2020"]
 
     report_date = datetime.now().strftime("%d%m%Y")
-    file_path = "\\Data\\Data_store"
-
-    file_bs = f"{file_path}\\{stock_code}_bs_{report_date}.xlsx"
-    file_is = f"{file_path}\\{stock_code}_is_{report_date}.xlsx"
-    file_cf = f"{file_path}\\{stock_code}_cf_{report_date}.xlsx"
+    base = DATA_STORE_DIR
+    base.mkdir(parents=True, exist_ok=True)
+    file_bs = str((base / f"{stock_code}_bs_{report_date}.xlsx").resolve())
+    file_is = str((base / f"{stock_code}_is_{report_date}.xlsx").resolve())
+    file_cf = str((base / f"{stock_code}_cf_{report_date}.xlsx").resolve())
 
     df_bs_final.to_excel(file_bs, index=True)
     df_is_final.to_excel(file_is, index=True)
@@ -401,8 +419,9 @@ def export_financial_ratios(stock_code, period='year', lang='vi', dropna=True):
     """
     df_ratios = financial_ratios_final(stock_code, period, lang, dropna)
     report_date = datetime.now().strftime("%d%m%Y")
-    file_path = "\\Data\\Data_store"
-    file_ratios = f"{file_path}\\{stock_code}_financialratios_{report_date}.xlsx"
+    base = DATA_STORE_DIR
+    base.mkdir(parents=True, exist_ok=True)
+    file_ratios = str((base / f"{stock_code}_financialratios_{report_date}.xlsx").resolve())
     df_ratios.to_excel(file_ratios, index=True)
     print("Xuất file tỷ số tài chính thành công!")
 
