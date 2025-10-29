@@ -230,7 +230,7 @@ def extract_month_year(founding_date_text):
 
 def get_company_introduction(stock_code, company_name, founding_date, initial_capital, ask_gemini_fn):
     """
-    Lấy giới thiệu về công ty bằng Gemini AI viết theo mẫu chuyên nghiệp (khoảng 150 chữ).
+    Lấy giới thiệu về công ty bằng Gemini AI viết theo mẫu chuyên nghiệp (khoảng 300 từ).
     
     Args:
         stock_code: Mã cổ phiếu
@@ -240,7 +240,7 @@ def get_company_introduction(stock_code, company_name, founding_date, initial_ca
         ask_gemini_fn: Hàm gọi Gemini
     
     Returns:
-        str: Giới thiệu về công ty (khoảng 150 chữ) viết theo mẫu chuyên nghiệp
+        str: Giới thiệu về công ty (khoảng 300 từ) viết theo mẫu chuyên nghiệp
     """
     # Tạo fallback không dùng raw text
     # Parse năm từ founding_date nếu có
@@ -252,7 +252,7 @@ def get_company_introduction(stock_code, company_name, founding_date, initial_ca
     
     fallback = f"{company_name} (mã chứng khoán {stock_code}) được thành lập vào {founding_year if founding_year != 'N/A' else 'năm chưa xác định'} với vốn điều lệ ban đầu {initial_capital if initial_capital and initial_capital != 'N/A' else 'chưa có thông tin'}. Công ty đã phát triển qua nhiều giai đoạn và hiện có vị thế vững chắc trên thị trường chứng khoán Việt Nam với hoạt động kinh doanh đa dạng và hiệu quả."
     
-    prompt = f"""Bạn là chuyên gia viết báo cáo tài chính chuyên nghiệp. Hãy viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo ĐÚNG mẫu và phong cách dưới đây, hoàn toàn bằng tiếng Việt:
+    prompt = f"""Bạn là chuyên gia viết báo cáo tài chính chuyên nghiệp. Hãy viết giới thiệu về công ty {company_name} (mã chứng khoán {stock_code}) theo ĐÚNG mẫu và phong cách dưới đây, hoàn toàn bằng tiếng Việt, khoảng 300 từ:
 
 Công ty Cổ phần Tập đoàn Gelex (mã chứng khoán GEX) khởi nguồn từ Tổng Công ty Thiết bị kỹ thuật điện được thành lập vào ngày 27 tháng 10 năm 1995 theo Quyết định của Bộ Công nghiệp nặng (nay là Bộ Công Thương). Trải qua hơn một thập kỷ hoạt động theo mô hình Tổng Công ty Nhà nước, Gelex chính thức chuyển đổi thành Tổng Công ty Cổ phần Thiết bị điện Việt Nam vào ngày 01 tháng 12 năm 2010, sau đợt IPO thành công tại HNX. Kể từ khi Bộ Công Thương thoái toàn bộ vốn vào cuối năm 2015, công ty đã đẩy mạnh quá trình tái cấu trúc và phát triển mạnh mẽ. Đặc biệt, Gelex đã thực hiện nhiều đợt tăng vốn điều lệ ấn tượng, củng cố vị thế trên thị trường. Công ty chính thức niêm yết trên Sở Giao dịch Chứng khoán TP. Hồ Chí Minh (HOSE) từ đầu năm 2018. Bước ngoặt quan trọng là việc đổi tên thành Công ty Cổ phần Tập đoàn Gelex vào ngày 24 tháng 6 năm 2021, đánh dấu sự mở rộng sang mô hình Tập đoàn đa ngành. Đến tháng 9 năm 2024, vốn điều lệ của Tập đoàn đã đạt mức 8.594,29 tỷ đồng, khẳng định vị thế là một trong những tập đoàn kinh tế hàng đầu Việt Nam."""
     
@@ -281,35 +281,16 @@ Công ty Cổ phần Tập đoàn Gelex (mã chứng khoán GEX) khởi nguồn 
                 print(f"[INFO] Using parsed fallback due to raw text issue")
                 intro_text = fallback
     
-    # Đảm bảo không quá dài (trim nếu cần)
-    if len(intro_text) > 165:
-        # Tìm câu cuối phù hợp để cắt, ưu tiên cắt ở dấu chấm
-        sentences = intro_text.split('.')
-        trimmed = ""
-        for i, sent in enumerate(sentences):
-            test_text = trimmed + sent + '.' if sent.strip() else trimmed
-            if len(test_text) <= 160:
-                if sent.strip():
-                    trimmed += sent + '.'
-            else:
-                break
-        if trimmed and len(trimmed) >= 120:  # Đảm bảo còn đủ dài
-            intro_text = trimmed.strip()
-        else:
-            # Nếu trim không ổn, cắt theo từ
-            words = intro_text.split()
-            trimmed_words = []
-            char_count = 0
-            for word in words:
-                if char_count + len(word) + 1 <= 157:
-                    trimmed_words.append(word)
-                    char_count += len(word) + 1
-                else:
-                    break
-            if trimmed_words:
-                intro_text = ' '.join(trimmed_words) + "..."
-            else:
-                intro_text = intro_text[:157] + "..."
+    # Kiểm tra số từ - chỉ giới hạn ở 300 từ, không cắt nếu dưới 300 từ
+    words = intro_text.split()
+    word_count = len(words)
+    
+    if word_count > 300:
+        # Chỉ trim nếu vượt quá 300 từ
+        intro_text = ' '.join(words[:300]) + "..."
+        print(f"[INFO] Truncated company introduction from {word_count} to 300 words")
+    else:
+        print(f"[INFO] Company introduction length: {word_count} words (within limit)")
     
     return intro_text
 
@@ -729,13 +710,22 @@ class PDF(FPDF):
         shareholders_value = num_shareholders or overview.get("no_shareholders", "N/A")
         employees_value = num_employees or overview.get("no_employees", "N/A")
         
-        # 1.1 Giới thiệu về công ty
+        # 1.1 Giới thiệu về công ty - Hiển thị đầy đủ nội dung, tự động xuống trang nếu cần
         if company_intro:
             self.add_subsection_header("1.1 Giới thiệu về công ty")
             self.set_font("DejaVu", "", 7)
             self.set_text_color(0, 0, 0)
-            self.multi_cell(0, 4, company_intro, align='J')
-            self.ln(3)
+            # Kiểm tra không gian còn lại - nếu ít hơn 40mm, thêm trang mới để đảm bảo có đủ chỗ
+            current_y = self.get_y()
+            remaining_space = self.h - current_y - 30  # 30mm bottom margin + footer space
+            
+            if remaining_space < 40:  # Nếu còn ít hơn 40mm, thêm trang mới
+                self.add_page()
+            
+            # Hiển thị nội dung với multi_cell - tự động xuống dòng và thêm trang nếu cần
+            # Sử dụng line_height nhỏ hơn để tiết kiệm không gian nhưng vẫn đọc được
+            self.multi_cell(0, 3.5, company_intro, align='J')
+            self.ln(5)  # Thêm khoảng cách sau nội dung
         
         # 1.2 Sứ mệnh và triết lý kinh doanh
         if company_mission:
