@@ -78,18 +78,21 @@ def inject_custom_css():
             background: transparent;
         }
         
-        /* Header container - Modern card design */
+        /* Header container - Modern card design with better proportions */
         .header-container {
             text-align: center;
-            padding: 4rem 3rem;
+            padding: 3rem 2.5rem;
             background: var(--bg-card);
             backdrop-filter: blur(20px);
-            border-radius: 24px;
-            margin-bottom: 3rem;
+            border-radius: 20px;
+            margin-bottom: 2.5rem;
             border: 1px solid var(--border-color);
             box-shadow: var(--shadow-xl);
             position: relative;
             overflow: hidden;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .header-container::before {
@@ -98,29 +101,36 @@ def inject_custom_css():
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
             background: var(--primary-gradient);
         }
         
         .app-title {
             font-family: 'Poppins', sans-serif;
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
             line-height: 1.2;
         }
         
         .app-subtitle {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             color: var(--text-secondary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             font-weight: 400;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
+            line-height: 1.4;
+        }
+        
+        /* Input section styling */
+        .input-section {
+            margin-top: 1.5rem;
+            padding: 0 1rem;
         }
         
         /* Search input container - Modern glassmorphism card */
@@ -166,63 +176,167 @@ def inject_custom_css():
             display: none !important;
         }
         
-        /* Modern input field styling - Ultra Premium */
+        /* Modern input field styling - Professional Design */
         .stTextInput input[type="text"],
         input[type="text"][placeholder*="mã cổ phiếu"],
         input[type="text"][id^="text_input"],
         input.st-ae.st-bd.st-be.st-bf,
         input[class*="st-"] {
-            background: transparent !important;
+            background: rgba(255, 255, 255, 0.05) !important;
             color: var(--text-primary) !important;
-            border: none !important;
-            border-radius: 18px !important;
-            padding: 1.5rem 2rem !important;
-            font-size: 1.2rem !important;
-            font-weight: 400 !important;
+            border: 2px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 16px !important;
+            padding: 1.25rem 3.5rem 1.25rem 1.5rem !important;
+            font-size: 1.1rem !important;
+            font-weight: 500 !important;
             font-family: 'Inter', sans-serif !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
             width: 100% !important;
             box-sizing: border-box !important;
+            backdrop-filter: blur(10px) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
         }
         
         .stTextInput input[type="text"]:focus,
         input[type="text"][placeholder*="mã cổ phiếu"]:focus,
         input.st-ae.st-bd.st-be.st-bf:focus {
             border-color: #667eea !important;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2), 0 8px 24px rgba(102, 126, 234, 0.3) !important;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 8px 32px rgba(102, 126, 234, 0.2) !important;
             outline: none !important;
-            background: rgba(15, 23, 42, 0.9) !important;
-            transform: translateY(-1px) scale(1.01);
+            background: rgba(255, 255, 255, 0.08) !important;
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .stTextInput input[type="text"]:hover,
+        input[type="text"][placeholder*="mã cổ phiếu"]:hover {
+            border-color: rgba(102, 126, 234, 0.3) !important;
+            background: rgba(255, 255, 255, 0.07) !important;
+            transform: translateY(-1px);
         }
         
         .stTextInput input[type="text"]::placeholder,
         input[type="text"][placeholder*="mã cổ phiếu"]::placeholder {
             color: var(--text-muted) !important;
             font-weight: 400 !important;
-            opacity: 0.7 !important;
+            opacity: 0.8 !important;
+            font-size: 1rem !important;
         }
         
-        /* Input container wrapper */
-        div[data-baseweb="input"],
-        div[data-baseweb="base-input"] {
+        /* Input container wrapper - Enhanced */
+        div[data-baseweb="input"] {
+            position: relative;
             background: transparent !important;
         }
         
-        /* Search icon area enhancement */
-        div[data-testid="stElementContainer"]:has(input[placeholder*="mã cổ phiếu"])::after {
-            content: '🔍';
-            position: absolute;
-            right: 3rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.5rem;
-            opacity: 0.5;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+        div[data-baseweb="base-input"] {
+            background: transparent !important;
+            position: relative;
         }
         
-        div[data-testid="stElementContainer"]:has(input[placeholder*="mã cổ phiếu"]:focus)::after {
+        /* Professional search icon with better positioning */
+        div[data-baseweb="base-input"]::before {
+            content: '\\f002';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 600;
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.6;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1rem;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+        
+        div[data-baseweb="base-input"]:has(input:focus)::before {
+            opacity: 0.9;
+            color: #667eea;
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        div[data-baseweb="base-input"]:hover::before {
             opacity: 0.8;
+            color: #667eea;
+        }
+        
+        /* Add a subtle glow effect around the input */
+        div[data-testid="stElementContainer"]:has(input[placeholder*="mã cổ phiếu"]) {
+            position: relative;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        div[data-testid="stElementContainer"]:has(input[placeholder*="mã cổ phiếu"])::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            border-radius: 18px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+        
+        div[data-testid="stElementContainer"]:has(input[placeholder*="mã cổ phiếu"]:focus)::before {
+            opacity: 0.3;
+        }
+        
+        /* Enhanced input container styling */
+        div[data-testid="stElementContainer"]:has(input[placeholder*="mã cổ phiếu"]) {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        div[data-testid="stElementContainer"]:has(input[placeholder*="mã cổ phiếu"]:hover) {
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-1px);
+        }
+        
+        div[data-testid="stElementContainer"]:has(input[placeholder*="mã cổ phiếu"]:focus) {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+        }
+        
+        /* Professional button styling */
+        .stButton > button {
+            background: var(--primary-gradient) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 12px !important;
+            padding: 0.75rem 2rem !important;
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            font-family: 'Inter', sans-serif !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3) !important;
+            text-transform: none !important;
+            letter-spacing: 0.3px !important;
+        }
+        
+        .stButton > button:hover {
+            transform: translateY(-2px) scale(1.02) !important;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4) !important;
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 50%, #ec4899 100%) !important;
+        }
+        
+        .stButton > button:active {
+            transform: translateY(0) scale(0.98) !important;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3) !important;
+        }
+        
+        /* Button container centering */
+        div[data-testid="column"]:has(.stButton) {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
         }
         
         /* Autocomplete suggestions - Modern glassmorphism */
@@ -525,6 +639,8 @@ def main():
         '<div class="header-container">'
         '<h1 class="app-title"><i class="fas fa-chart-line"></i> HỆ THỐNG XUẤT BÁO CÁO PHÂN TÍCH CỔ PHIẾU TỰ ĐỘNG</h1>'
         '<p class="app-subtitle"><i class="fas fa-search"></i> Hãy nhập mã cổ phiếu của bạn</p>'
+        '<div class="input-section">'
+        '</div>'
         '</div>',
         unsafe_allow_html=True
     )
@@ -553,7 +669,7 @@ def main():
         search_input = st.text_input(
             label="",
             value=input_value if input_value else "",
-            placeholder="🔍 Nhập mã cổ phiếu hoặc tên công ty bạn muốn tìm...",
+            placeholder="Nhập mã cổ phiếu hoặc tên công ty bạn muốn tìm...",
             key="stock_search"
         )
     
@@ -592,7 +708,7 @@ def main():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         run_button = st.button(
-            "🚀 Tạo Báo Cáo",
+            "🚀 Tạo Báo Cáo Tự Động",
             type="primary",
             use_container_width=True
         )

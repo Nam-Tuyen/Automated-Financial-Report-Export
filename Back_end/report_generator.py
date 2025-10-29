@@ -163,6 +163,136 @@ def get_key_metrics(fr_df, bs_df, is_df):
     return metrics
 
 # ------------------- HÀM PHÂN TÍCH TỪ GEMINI ------------------- #
+def extract_month_year(founding_date_text):
+    """
+    Rút trích Month/Year từ chuỗi ngày thành lập.
+    
+    Args:
+        founding_date_text: Chuỗi chứa thông tin ngày thành lập
+    
+    Returns:
+        str: Format "Month/Year" hoặc "N/A" nếu không tìm thấy
+    """
+    if not founding_date_text or founding_date_text == "N/A":
+        return "N/A"
+    
+    text = str(founding_date_text)
+    
+    # Danh sách tháng tiếng Anh
+    months_en = {
+        'january': '01', 'february': '02', 'march': '03', 'april': '04',
+        'may': '05', 'june': '06', 'july': '07', 'august': '08',
+        'september': '09', 'october': '10', 'november': '11', 'december': '12'
+    }
+    
+    # Danh sách tháng tiếng Việt
+    months_vi = {
+        'tháng 1': '01', 'tháng 2': '02', 'tháng 3': '03', 'tháng 4': '04',
+        'tháng 5': '05', 'tháng 6': '06', 'tháng 7': '07', 'tháng 8': '08',
+        'tháng 9': '09', 'tháng 10': '10', 'tháng 11': '11', 'tháng 12': '12'
+    }
+    
+    # Pattern 1: "Month Year" (ví dụ: "March 2004")
+    pattern1 = re.search(r'(\w+)\s+(\d{4})', text, re.IGNORECASE)
+    if pattern1:
+        month_str = pattern1.group(1).lower()
+        year = pattern1.group(2)
+        if month_str in months_en:
+            month = months_en[month_str]
+            return f"{month}/{year}"
+    
+    # Pattern 2: "MM/YYYY" hoặc "MM-YYYY"
+    pattern2 = re.search(r'(\d{1,2})[/-](\d{4})', text)
+    if pattern2:
+        month = pattern2.group(1).zfill(2)
+        year = pattern2.group(2)
+        return f"{month}/{year}"
+    
+    # Pattern 3: "YYYY-MM-DD" hoặc "YYYY/MM/DD"
+    pattern3 = re.search(r'(\d{4})[/-](\d{1,2})', text)
+    if pattern3:
+        year = pattern3.group(1)
+        month = pattern3.group(2).zfill(2)
+        return f"{month}/{year}"
+    
+    # Pattern 4: Chỉ có năm, lấy năm đầu tiên tìm thấy
+    pattern4 = re.search(r'(\d{4})', text)
+    if pattern4:
+        year = pattern4.group(1)
+        # Thử tìm tháng
+        for month_vi, month_num in months_vi.items():
+            if month_vi in text.lower():
+                return f"{month_num}/{year}"
+        # Nếu không có tháng, chỉ trả về năm
+        return f"{year}"
+    
+    return "N/A"
+
+def get_company_introduction(stock_code, company_name, founding_date, initial_capital, ask_gemini_fn):
+    """
+    Lấy giới thiệu về công ty bằng Gemini AI (khoảng 150 chữ).
+    
+    Args:
+        stock_code: Mã cổ phiếu
+        company_name: Tên công ty
+        founding_date: Ngày thành lập (chỉ cần Month/Year)
+        initial_capital: Vốn điều lệ khi thành lập
+        ask_gemini_fn: Hàm gọi Gemini
+    
+    Returns:
+        str: Giới thiệu về công ty (khoảng 150 chữ)
+    """
+    # Rút trích Month/Year từ founding_date
+    month_year = extract_month_year(founding_date)
+    
+    fallback = f"{company_name} được thành lập vào {month_year} với vốn điều lệ ban đầu {initial_capital}. Công ty hoạt động trong lĩnh vực kinh doanh với vị thế vững chắc trên thị trường và đóng góp tích cực cho sự phát triển của ngành."
+    
+    prompt = f"""Viết giới thiệu về công ty {company_name} (mã cổ phiếu: {stock_code}), KHOẢNG 150 CHỮ (không được quá dài), bao gồm:
+1. Thông tin cơ bản về công ty
+2. Ngày thành lập: {month_year}
+3. Vốn điều lệ khi mới thành lập: {initial_capital}
+4. Vị thế hoặc điểm nổi bật ngắn gọn
+
+YÊU CẦU:
+- Độ dài chính xác khoảng 150 chữ (không quá 160 chữ)
+- Viết tiếng Việt, ngắn gọn, chuyên nghiệp
+- Nêu được tổng quát về công ty"""
+    
+    intro_text = ask_gemini_fn(prompt, fallback_content=fallback)
+    
+    # Đảm bảo không quá dài (trim nếu cần)
+    if len(intro_text) > 160:
+        # Cắt từ đầu và thêm ...
+        intro_text = intro_text[:157] + "..."
+    
+    return intro_text
+
+def get_company_mission(stock_code, company_name, website, ask_gemini_fn):
+    """
+    Lấy sứ mệnh và triết lý kinh doanh bằng Gemini AI (3-4 dòng).
+    
+    Args:
+        stock_code: Mã cổ phiếu
+        company_name: Tên công ty
+        website: Website công ty
+        ask_gemini_fn: Hàm gọi Gemini
+    
+    Returns:
+        str: Sứ mệnh và triết lý kinh doanh (3-4 dòng)
+    """
+    fallback = f"{company_name} cam kết mang lại giá trị bền vững cho khách hàng, cổ đông và cộng đồng thông qua chất lượng dịch vụ và sản phẩm vượt trội. Công ty theo đuổi triết lý phát triển bền vững, đổi mới sáng tạo và tối đa hóa hiệu quả kinh doanh."
+    
+    prompt = f"""Viết về sứ mệnh và triết lý kinh doanh của {company_name} (mã cổ phiếu: {stock_code}), khoảng 3-4 dòng:
+1. Sứ mệnh của công ty
+2. Triết lý kinh doanh
+3. Giá trị cốt lõi hoặc cam kết
+
+Website: {website} (tham khảo nếu cần)
+
+Viết tiếng Việt, ngắn gọn, chuyên nghiệp, dựa trên thông tin công khai."""
+    
+    return ask_gemini_fn(prompt, fallback_content=fallback)
+
 def get_executive_summary(stock_code, industry_info, key_metrics):
     """Lấy investment snapshot ngắn gọn (thay thế Executive Summary)."""
     industry_name = ""
@@ -527,30 +657,68 @@ class PDF(FPDF):
         self.set_y(-7)  # Giảm từ -8 xuống -7
         self.cell(0, 4, f'Trang {self.page_no()} / {{nb}}', 0, 1, 'C')
 
-    def basic_information(self, overview_df, profile_df):
-        """Hiển thị thông tin cơ bản với styling đẹp (COMPACT)."""
+    def basic_information(self, overview_df, profile_df, company_intro=None, company_mission=None, 
+                          website=None, founding_date=None, num_shareholders=None, num_employees=None):
+        """
+        Hiển thị thông tin cơ bản với styling đẹp (COMPACT).
+        
+        Args:
+            overview_df: DataFrame thông tin tổng quan
+            profile_df: DataFrame thông tin hồ sơ
+            company_intro: Văn bản giới thiệu công ty (từ AI)
+            company_mission: Văn bản sứ mệnh (từ AI)
+            website: Website công ty
+            founding_date: Ngày thành lập
+            num_shareholders: Số lượng cổ đông
+            num_employees: Số lượng nhân viên
+        """
         self.add_section_header("1. THÔNG TIN CƠ BẢN VỀ CÔNG TY")
         
         overview = overview_df.iloc[0] if not overview_df.empty else {}
         profile = profile_df.iloc[0] if not profile_df.empty else {}
         
+        # Lấy thông tin từ parameters hoặc DataFrame
+        website_value = website or overview.get("website", "N/A")
+        founding_date_value = founding_date or profile.get("history_dev", "N/A")
+        shareholders_value = num_shareholders or overview.get("no_shareholders", "N/A")
+        employees_value = num_employees or overview.get("no_employees", "N/A")
+        
+        # 1.1 Giới thiệu về công ty
+        if company_intro:
+            self.add_subsection_header("1.1 Giới thiệu về công ty")
+            self.set_font("DejaVu", "", 7)
+            self.set_text_color(0, 0, 0)
+            self.multi_cell(0, 4, company_intro, align='J')
+            self.ln(3)
+        
+        # 1.2 Sứ mệnh và triết lý kinh doanh
+        if company_mission:
+            self.add_subsection_header("1.2 Sứ mệnh và triết lý kinh doanh")
+            self.set_font("DejaVu", "", 7)
+            self.set_text_color(0, 0, 0)
+            self.multi_cell(0, 4, company_mission, align='J')
+            self.ln(3)
+        
+        # Thông tin chi tiết
+        # Rút trích Month/Year từ founding_date để hiển thị
+        founding_date_display = extract_month_year(founding_date_value) if founding_date_value != "N/A" else "N/A"
+        
         info_items = [
-            ("Website", overview.get("website", "N/A")),
-            ("Ngày thành lập", profile.get("history_dev", "N/A")),
-            ("Số lượng cổ đông", overview.get("no_shareholders", "N/A")),
-            ("Số lượng nhân viên", overview.get("no_employees", "N/A")),
+            ("Website", website_value),
+            ("Ngày thành lập", founding_date_display),
+            ("Số lượng cổ đông", str(shareholders_value) if shareholders_value != "N/A" else "N/A"),
+            ("Số lượng nhân viên", str(employees_value) if employees_value != "N/A" else "N/A"),
         ]
         
+        self.ln(2)
         for label, value in info_items:
-            if value != "N/A":
-                self.set_font("DejaVu", "B", 8)  # Giảm từ 9 xuống 8
+            if value and value != "N/A":
+                self.set_font("DejaVu", "B", 8)
                 self.set_text_color(*COLOR_SECONDARY)
-                self.cell(60, 5, f"{label}:", 0, 0, "L")  # Giảm height từ 6 xuống 5
-                self.set_font("DejaVu", "", 7)  # Giảm từ 8 xuống 7
+                self.cell(60, 5, f"{label}:", 0, 0, "L")
+                self.set_font("DejaVu", "", 7)
                 self.set_text_color(0, 0, 0)
-                self.cell(0, 5, str(value)[:100], 0, 1, "L")  # Truncate dài
-        
-        # BỎ highlight boxes để tiết kiệm không gian cho 5 pages
+                self.cell(0, 5, str(value)[:120], 0, 1, "L")
 
     def create_executives_table(self, executives_df):
         """Tạo bảng ban lãnh đạo với styling đẹp (COMPACT - CHỈ TOP 5)."""
@@ -819,8 +987,72 @@ def generate_stock_report(stock_code):
     
     # 5. Company Information (GỘP Industry Analysis vào đây để tiết kiệm page)
     print("   Đang tạo phần thông tin công ty...")
+    
+    # Lấy thông tin công ty để gọi AI
+    overview = overview_df.iloc[0] if not overview_df.empty else {}
+    profile = profile_df.iloc[0] if not profile_df.empty else {}
+    
+    # Lấy thông tin từ DataFrame, có thể được truyền vào từ ngoài hoặc lấy từ data
+    website = overview.get("website", "")
+    founding_date_raw = profile.get("history_dev", "")
+    num_shareholders = overview.get("no_shareholders", "")
+    num_employees = overview.get("no_employees", "")
+    
+    # Rút trích Month/Year từ founding_date để truyền vào AI
+    month_year_for_intro = extract_month_year(founding_date_raw) if founding_date_raw else "N/A"
+    
+    # Tìm thông tin vốn điều lệ ban đầu từ founding_date
+    initial_capital = "N/A"
+    if founding_date_raw:
+        # Extract vốn điều lệ từ chuỗi founding_date nếu có
+        if "VND" in str(founding_date_raw).upper():
+            vnd_match = re.search(r'VND[\d.]+(?:\s*tỷ|\s*triệu)?', str(founding_date_raw), re.IGNORECASE)
+            if vnd_match:
+                initial_capital = vnd_match.group(0)
+            else:
+                # Nếu có VND trong text nhưng không match pattern, lấy phần chứa VND
+                parts = str(founding_date_raw).split()
+                for i, part in enumerate(parts):
+                    if "VND" in part.upper():
+                        # Lấy part này và các part liên quan
+                        initial_capital = " ".join(parts[max(0, i-1):i+2])
+                        break
+        elif "vốn" in str(founding_date_raw).lower() or "capital" in str(founding_date_raw).lower():
+            # Tìm phần chứa thông tin vốn
+            initial_capital = str(founding_date_raw)
+    
+    # Gọi AI để lấy giới thiệu và sứ mệnh
+    print("   Đang lấy thông tin giới thiệu công ty từ AI...")
+    company_intro = get_company_introduction(
+        stock_code=stock_code,
+        company_name=company_name,
+        founding_date=month_year_for_intro,  # Chỉ truyền Month/Year (ví dụ: "03/2004")
+        initial_capital=initial_capital if initial_capital != "N/A" else "",
+        ask_gemini_fn=ask_gemini
+    )
+    
+    print("   Đang lấy thông tin sứ mệnh từ AI...")
+    company_mission = get_company_mission(
+        stock_code=stock_code,
+        company_name=company_name,
+        website=website,
+        ask_gemini_fn=ask_gemini
+    )
+    
     pdf.add_page()
-    pdf.basic_information(overview_df, profile_df)
+    # Hiển thị Month/Year trong phần thông tin
+    # (đã được extract ở trên trong month_year_for_intro)
+    
+    pdf.basic_information(
+        overview_df=overview_df, 
+        profile_df=profile_df,
+        company_intro=company_intro,
+        company_mission=company_mission,
+        website=website,
+        founding_date=founding_date_raw,  # Truyền raw để extract trong basic_information
+        num_shareholders=num_shareholders,
+        num_employees=num_employees
+    )
     pdf.create_executives_table(executives_df)
     pdf.create_subsidiaries_table(subsidiaries_df)
     
